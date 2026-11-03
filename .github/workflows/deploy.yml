@@ -28,11 +28,17 @@ jobs:
         with:
           node-version: 20
 
-      - name: Extract project zip
+      - name: Extract and Locate Project
         run: |
-          unzip -o notlarim-defter.zip -d .
+          mkdir -p extracted
+          unzip -o notlarim-defter.zip -d extracted
+          
+          # Zip içerisindeki package.json'ın olduğu klasörü bulup oraya geçiyoruz
+          PKG_PATH=$(find extracted -name "package.json" -exec dirname {} \; | head -n 1)
+          echo "PROJECT_DIR=$PKG_PATH" >> $GITHUB_ENV
 
       - name: Install dependencies and build
+        working-directory: ${{ env.PROJECT_DIR }}
         run: |
           npm install
           npm run build
@@ -43,7 +49,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: '${{ env.PROJECT_DIR }}/dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
