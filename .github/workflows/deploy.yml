@@ -33,11 +33,17 @@ jobs:
           mkdir -p extracted
           unzip -o notlarim-defter.zip -d extracted
 
-      - name: Install dependencies and build
-        working-directory: ./extracted
+      - name: Find and build project
         run: |
+          # package.json dosyasının nerede olduğunu otomatik bulur
+          PROJECT_DIR=$(dirname $(find extracted -name "package.json" -quit))
+          echo "Proje dizini bulundu: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
           npm install
           npm run build
+          # Derlenen dist klasörünü pages'e hazırlamak için taşıyoruz
+          mkdir -p ../../final_dist
+          cp -r dist/* ../../final_dist/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -45,7 +51,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './extracted/dist'
+          path: './final_dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
