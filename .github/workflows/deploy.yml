@@ -38,13 +38,20 @@ jobs:
           PKG_PATH=$(find extracted -name "package.json" -not -path "*/node_modules/*" -exec dirname {} \; | head -n 1)
           echo "PROJECT_DIR=$PKG_PATH" >> $GITHUB_ENV
 
-      - name: Install dependencies and build
+      - name: Install dependencies
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm install
+
+      - name: Tip kontrolü (bilgi amaçlı, derlemeyi durdurmaz)
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npx tsc --noEmit
+        continue-on-error: true
+
+      - name: Build
         working-directory: ${{ env.PROJECT_DIR }}
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
-        run: |
-          npm install
-          npm run build
+        run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
