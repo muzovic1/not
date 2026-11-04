@@ -3,6 +3,7 @@ name: Deploy Vite App from Zip
 on:
   push:
     branches: ["main"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -26,25 +27,27 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Extract and Locate Project
         run: |
           mkdir -p extracted
-          unzip -o notlarim-defter.zip -d extracted
-          
-          # Zip içerisindeki package.json'ın olduğu klasörü bulup oraya geçiyoruz
-          PKG_PATH=$(find extracted -name "package.json" -exec dirname {} \; | head -n 1)
+          unzip -oq notlarim-defter.zip -d extracted
+
+          # Zip içindeki package.json'ın olduğu klasörü bul (node_modules hariç)
+          PKG_PATH=$(find extracted -name "package.json" -not -path "*/node_modules/*" -exec dirname {} \; | head -n 1)
           echo "PROJECT_DIR=$PKG_PATH" >> $GITHUB_ENV
 
       - name: Install dependencies and build
         working-directory: ${{ env.PROJECT_DIR }}
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
         run: |
           npm install
           npm run build
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
